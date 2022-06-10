@@ -96,3 +96,21 @@ export async function redirect(req,res){
     }
 
 }
+
+export async function deleteUrl(req,res){
+    const { id } = req.params;
+
+    try {
+        const query = `
+            DELETE FROM urls 
+            WHERE id = $1
+        `;
+        const values = [id];
+        await db.query(query,values);
+
+        res.sendStatus(204);
+    } catch(e) {
+        console.log(e);
+		res.status(500).send("Ocorreu um erro durante a execução do processo.");
+    }
+}

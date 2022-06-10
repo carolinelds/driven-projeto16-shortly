@@ -83,3 +83,37 @@ export async function checkShortUrl(req,res,next){
 
     next();
 }
+
+export async function checkOwner(req,res,next){
+    const { id } = req.params;
+    const { authorization } = req.headers;
+    const token = authorization.replace("Bearer","").trim();
+
+    try {
+        const querySessions = `
+            SELECT sessions."idUser" FROM sessions
+            WHERE token = $1
+        `;
+        const valuesSessions = [token];
+        const sessionsResult = await db.query(querySessions, valuesSessions);
+        const idUserSessions = sessionsResult.rows[0].idUser;
+
+        const queryUrls = `
+            SELECT urls."idUser" FROM urls
+            WHERE id = $1
+        `;
+        const valuesUrls = [id];
+        const urlsResult = await db.query(queryUrls, valuesUrls);
+        const idUserUrls = urlsResult.rows[0].idUser;
+
+        if (idUserSessions !== idUserUrls){
+            res.sendStatus(401);
+        }
+
+    } catch(e) {
+        res.status(500).send("Erro inesperado na validação do id.");
+        return;
+    }
+
+    next();
+}
