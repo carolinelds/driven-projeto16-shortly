@@ -93,3 +93,23 @@ export async function getUserData(req,res){
 		res.status(500).send("Ocorreu um erro durante a execução do processo.");
     }
 }
+
+export async function getRanking(req,res){
+    try {
+        const query = `
+            SELECT users.id, users.name, COUNT(urls."idUser") AS "linksCount", SUM(urls."visitCount") AS "visitCount"
+            FROM users
+            JOIN urls ON urls."idUser" = users.id
+            GROUP BY users.id
+            ORDER BY "visitCount" DESC
+            LIMIT 10
+        `;
+        const result = await db.query(query);
+
+        res.status(200).send(result.rows);
+        
+    } catch(e) {
+        console.log(e);
+		res.status(500).send("Ocorreu um erro durante a execução do processo.");
+    }
+}
