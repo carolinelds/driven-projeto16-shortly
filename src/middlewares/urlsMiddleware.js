@@ -37,3 +37,26 @@ export function checkUrl(req,res,next){
 
     next();
 }
+
+export async function checkId(req,res,next){
+    const { id } = req.params;
+
+    try {
+        const queryId = `
+            SELECT * FROM urls
+            WHERE id = $1
+        `;
+        const valuesId = [id];
+        const checkExists = await db.query(queryId, valuesId);
+        if (checkExists.rowCount === 0) {
+            res.sendStatus(404);
+            return;
+        }
+
+    } catch (e) {
+        res.status(500).send("Erro inesperado na validação do id.");
+        return;
+    }
+
+    next();
+}
