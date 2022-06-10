@@ -1,5 +1,6 @@
 import db from "./../db.js";
-import bcrypt from "bcrypt"; 
+import bcrypt from "bcrypt";
+import { v4 as uuid } from 'uuid';
 
 export async function register(req, res){
     const user = req.body;
@@ -19,10 +20,35 @@ export async function register(req, res){
 
     } catch(e) {
         console.log(e);
-		res.status(500).send("Ocorreu um erro ao cadastrar usuário");
+		res.status(500).send("Ocorreu um erro ao cadastrar usuário.");
     }
 }
 
 export async function login(req, res){
-    
+    const user = req.body;
+
+    try {
+        const queryUserId = `
+            SELECT id FROM users 
+            WHERE email = $1
+        `;
+        const valuesUserId = [user.email];
+        const userIdResult = await db.query(queryUserId, valuesUserId);
+        const userId = userIdResult.rows[0].id;
+
+        const token = uuid();
+
+        const querySessions = `
+            INSERT INTO sessions ("idUser", token)
+            VALUES ($1, $2)
+        `;
+        const valuesSessions = [userId, token];
+        await db.query(querySessions, valuesSessions);
+
+        res.status(200).send(token);
+
+    } catch(e) {
+        console.log(e);
+		res.status(500).send("Ocorreu um erro ao fazer login.");
+    }
 }
