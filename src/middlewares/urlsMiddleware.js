@@ -60,3 +60,26 @@ export async function checkId(req,res,next){
 
     next();
 }
+
+export async function checkShortUrl(req,res,next){
+    const { shortUrl } = req.params;
+
+    try {
+        const queryShortUrl = `
+            SELECT * FROM urls
+            WHERE short = $1
+        `;
+        const valuesShortUrl = [shortUrl];
+        const checkExists = await db.query(queryShortUrl, valuesShortUrl);
+        if (checkExists.rowCount === 0) {
+            res.sendStatus(404);
+            return;
+        }
+        
+    } catch(e) {
+        res.status(500).send("Erro inesperado na validação da url.");
+        return;
+    } 
+
+    next();
+}

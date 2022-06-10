@@ -64,3 +64,35 @@ export async function getShort(req,res){
 		res.status(500).send("Ocorreu um erro durante a busca por esse id.");
     }
 }
+
+export async function redirect(req,res){
+    const { shortUrl } = req.params;
+
+    try {
+        const queryUrl = `
+            SELECT urls.id, urls.url, urls."visitCount"
+            FROM urls
+            WHERE short = $1
+        `;
+        const valuesUrl = [shortUrl];
+        const urlQuery = await db.query(queryUrl, valuesUrl);
+        const idUrl = urlQuery.rows[0].id;
+        const originalUrl = urlQuery.rows[0].url;
+        const newNumberVisits = urlQuery.rows[0].visitCount + 1;
+
+        const queryVisits = `
+            UPDATE urls
+            SET "visitCount" = $1
+            WHERE id = $2
+        `;
+        const valuesVisits = [newNumberVisits, idUrl];
+        await db.query(queryVisits, valuesVisits);
+
+        res.redirect(originalUrl);
+
+    } catch(e) {
+        console.log(e);
+		res.status(500).send("Ocorreu um erro durante a execução do processo.");
+    }
+
+}
