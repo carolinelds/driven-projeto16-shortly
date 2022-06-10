@@ -1,7 +1,7 @@
-import db from "./../db.js";
+import db from "../db.js";
 import bcrypt from "bcrypt";
-import signupSchema from "./../schemas/signupSchema.js";
-import signinSchema from "./../schemas/signinSchema.js";
+import signupSchema from "../schemas/signupSchema.js";
+import signinSchema from "../schemas/signinSchema.js";
 
 export function checkSignUpSchema(req,res,next){
     const user = req.body;
@@ -81,5 +81,51 @@ export async function checkUserPassword(req,res,next){
         res.status(500).send("Erro inesperado na validação dos dados.");
         return;
     }
+    next();
+}
+
+export async function checkUserIdExists(req,res,next){
+    const { id } = req.params;
+
+    try {
+        const query = `
+            SELECT * FROM users
+            WHERE id = $1
+        `;
+        const values = [id];
+        const checkExists = await db.query(query, values);
+        if (checkExists.rowCount === 0) {
+            res.sendStatus(404);
+            return;
+        }
+
+    } catch(e) {
+        res.status(500).send("Erro inesperado na validação do id.");
+        return;
+    }
+
+    next();
+}
+
+export async function checkUserHasUrls(req,res,next){
+    const { id } = req.params;
+
+    try {
+        const query = `
+            SELECT * FROM urls
+            WHERE "idUser" = $1
+        `;
+        const values = [id];
+        const checkExists = await db.query(query, values);
+        if (checkExists.rowCount === 0) {
+            res.sendStatus(404);
+        return;
+    }
+
+    } catch(e) {
+        res.status(500).send("Erro inesperado na validação do id.");
+        return;
+    }
+
     next();
 }

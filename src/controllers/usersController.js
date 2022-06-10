@@ -1,4 +1,4 @@
-import db from "./../db.js";
+import db from "../db.js";
 import bcrypt from "bcrypt";
 import { v4 as uuid } from 'uuid';
 
@@ -50,5 +50,46 @@ export async function login(req, res){
     } catch(e) {
         console.log(e);
 		res.status(500).send("Ocorreu um erro ao fazer login.");
+    }
+}
+
+export async function getUserData(req,res){
+    const { id } = req.params;
+
+    try {
+        const query= `
+            SELECT users.name, SUM(urls."visitCount") as "visitCount" 
+            FROM users
+            JOIN urls ON urls."idUser" = users.id
+            WHERE users.id = $1
+            GROUP BY users.id
+        `;
+        const values = [id];
+        const result = await db.query(query, values);
+        console.log(result.rows);
+        const userName = result.rows[0].name;
+        const visitCount = result.rows[0].visitCount;
+
+        const queryUrls = `
+            SELECT urls.id, urls.short AS "shortUrl", urls.url, urls."visitCount"
+            FROM urls
+            WHERE urls."idUser" = $1
+        `;
+        const valuesUrls = [id];
+        const urlsResult = await db.query(queryUrls, valuesUrls);
+        const shortenedUrls = urlsResult.rows;
+
+        const response = {
+            id: id,
+            name: userName,
+            visitCount: visitCount,
+            shortenedUrls
+        };
+
+        res.status(200).send(response);
+
+    } catch(e) {
+        console.log(e);
+		res.status(500).send("Ocorreu um erro durante a execução do processo.");
     }
 }
